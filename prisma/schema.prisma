@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model candidat {
+  id          Int           @id @default(autoincrement())
+  prenom      String        @db.VarChar(50)
+  nom         String        @db.VarChar(50)
+  email       String        @db.VarChar(100)
+  telephone   String?       @db.VarChar(20)
+  resume      String?
+  candidature candidature[]
+  documents   documents[]
+}
+
+model candidature {
+  id                  Int           @id @default(autoincrement())
+  date_candidature    DateTime      @default(now())
+  education           String?
+  experience          String?
+  statut              String?
+  autres_informations String?
+  offre_emploi_id     Int?
+  candidat_id         Int?
+  candidat            candidat?     @relation(fields: [candidat_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  offre_emploi        offre_emploi? @relation(fields: [offre_emploi_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model categorie_emploi {
+  id           Int            @id @default(autoincrement())
+  code         String         @db.VarChar(50)
+  nom          String         @db.VarChar(100)
+  description  String?
+  offre_emploi offre_emploi[]
+}
+
+model documents {
+  id                   Int       @id @default(autoincrement())
+  nom                  String    @db.VarChar(100)
+  fichier              Bytes?
+  candidat_id          Int?
+  derniere_mise_a_jour DateTime? @default(now())
+  candidat             candidat? @relation(fields: [candidat_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model offre_emploi {
+  id                  Int               @id @default(autoincrement())
+  nom                 String            @db.VarChar(100)
+  description         String?
+  date_publication    DateTime          @default(now())
+  date_debut          DateTime          @db.Date
+  nombre_vacances     Int
+  salaire_min         Int?
+  salaire_max         Int?
+  type_contrat        String?           @db.VarChar(50)
+  categorie_emploi_id Int?
+  poste_id            Int?
+  organisation_id     Int?
+  recruteur_id        Int?
+  candidature         candidature[]
+  categorie_emploi    categorie_emploi? @relation(fields: [categorie_emploi_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organisation        organisation?     @relation(fields: [organisation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  poste               poste?            @relation(fields: [poste_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  recruteur           recruteur?        @relation(fields: [recruteur_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model organisation {
+  id           Int            @id @default(autoincrement())
+  nom          String         @db.VarChar(100)
+  description  String?
+  // Organisation image
+  offre_emploi offre_emploi[]
+}
+
+// What is poste , and what are we going to use it for
+model poste {
+  id           Int            @id @default(autoincrement())
+  code         String         @db.VarChar(50)
+  nom          String         @db.VarChar(100)
+  description  String?
+  offre_emploi offre_emploi[]
+}
+
+model recruteur {
+  id           Int            @id @default(autoincrement())
+  prenom       String         @db.VarChar(50)
+  nom          String         @db.VarChar(50)
+  offre_emploi offre_emploi[]
+}
+
+// we need tables for authentication and authorization
+// Users Role - One to many relationship 
+// Roles (Recruteur, Candidat, Admin)
